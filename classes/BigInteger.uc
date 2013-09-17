@@ -56,18 +56,22 @@ function string asString() {
     return stringBytes;
 }
 
-/**
- * @todo: handle -0 case
- */
 static function final array<byte> twosComplement(array<byte> input) {
     local int i;
-    local array<byte> one;
+    local array<byte> one, flippedBytes, copy;
+    local bool isZero;
 
     one[0]= 0x1;
+    isZero= true;
     for(i= 0; i < input.Length; i++) {
-        input[i]= input[i] ^ 0xff;
+        isZero= isZero && input[i] == 0;
+        flippedBytes[i]= input[i] ^ 0xff;
+        copy[i]= input[i];
     }
-    return addBytes(input, one);
+    if (isZero) {
+        return copy;
+    }
+    return addBytes(flippedBytes, one);
 }
 
 static function final byte addByte(byte carry, byte left, byte right, out byte sum) {
