@@ -198,3 +198,55 @@ static final preoperator BigInteger -(BigInteger right) {
 static final function BigInteger subtract(BigInteger left, BigInteger right) {
     return add(left, -right);
 }
+
+final function shiftLeft(int offset) {
+    local byte mask, temp;
+    local int pos, newPos, newIndex, index;
+
+    mask= 0x80;
+    for(pos= 7; pos >= 0 && (mask & bits[bits.Length - 1]) != 1; pos--) {
+        mask= mask >> 1;
+    }
+
+    newPos= (pos + offset) % 8;
+    newIndex= (pos + offset) / 8 + bits.Length - 1;
+    index= bits.Length - 1;
+    while(index >= 0) {
+        temp= bits[index] & mask;
+        if (temp != 0) {
+            if (newPos > pos) {
+                temp= temp << (newPos - pos);
+            } else {
+                temp= temp >> (pos - newPos);
+            }
+            bits[newIndex]= bits[newIndex] | temp;
+        }
+        newPos--;
+        pos--;
+        mask= mask >> 1;
+        if (newPos < 0) {
+            newPos= 7;
+            newIndex--;
+        }
+        if (pos < 0) {
+            pos= 7;
+            index--;
+            mask= 0x80;
+        }
+    }
+
+    mask= 0;
+    for(pos= 0; pos < newPos; pos++) {
+        mask= mask >> 1;
+        mask= mask | 0x80;
+    }
+    while(newIndex >= 0) {
+        bits[newIndex]= bits[newIndex] & mask;
+        if (mask == 0xff) {
+            newIndex--;
+            mask= 0;
+        }
+        mask= (mask >> 1) | 0x80;
+            
+    }
+}
