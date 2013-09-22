@@ -204,7 +204,7 @@ final function shiftLeft(int offset) {
     local int pos, newPos, newIndex, index;
 
     mask= 0x80;
-    for(pos= 7; pos >= 0 && (mask & bits[bits.Length - 1]) != 1; pos--) {
+    for(pos= 7; pos >= 0 && (mask & bits[bits.Length - 1]) != mask; pos--) {
         mask= mask >> 1;
     }
 
@@ -220,7 +220,15 @@ final function shiftLeft(int offset) {
                 temp= temp >> (pos - newPos);
             }
             bits[newIndex]= bits[newIndex] | temp;
+        } else {
+            if (newPos > pos) {
+                temp= mask << (newPos - pos);
+            } else {
+                temp= mask >> (pos - newPos);
+            }
+            bits[newIndex]= bits[newIndex] & (~temp);
         }
+
         newPos--;
         pos--;
         mask= mask >> 1;
@@ -235,18 +243,17 @@ final function shiftLeft(int offset) {
         }
     }
 
-    mask= 0;
-    for(pos= 0; pos < newPos; pos++) {
-        mask= mask >> 1;
-        mask= mask | 0x80;
-    }
-    while(newIndex >= 0) {
-        bits[newIndex]= bits[newIndex] & mask;
-        if (mask == 0xff) {
-            newIndex--;
-            mask= 0;
-        }
+    mask=0;
+    for(pos= 7; pos > newPos; pos--) {
         mask= (mask >> 1) | 0x80;
-            
+    }
+    while(mask != 0xff) {
+        bits[newIndex]= bits[newIndex] & mask;
+        mask= (mask >> 1) | 0x80;
+    }
+    newIndex--;
+    while(newIndex >= 0) {
+        bits[newIndex]= 0;
+        newIndex--;
     }
 }
