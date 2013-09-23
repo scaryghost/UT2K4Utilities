@@ -257,3 +257,57 @@ final function shiftLeft(int offset) {
         newIndex--;
     }
 }
+
+final function shiftRight(int offset) {
+    local byte mask, temp;
+    local int startIndex, index, startPos, pos;
+
+    startIndex= offset / 8;
+    startPos= offset % 8;
+    mask= 0x80;
+    for(pos= 7; pos > startPos; pos--) {
+        mask= mask >> 1;
+    }
+    pos= 0;
+    while(startIndex < bits.Length) {
+        temp= bits[startIndex] & mask;
+        if (temp != 0) {
+            if (startPos > pos) {
+                temp= temp >> (startPos - pos);
+            } else {
+                temp= temp << (pos - startPos);
+            }
+            bits[index]= bits[index] | temp;
+        } else {
+            if (startPos > pos) {
+                temp= mask >> (startPos - pos);
+            } else {
+                temp= mask << (pos - startPos);
+            }
+            bits[index]= bits[index] & (~temp);
+        }
+
+        pos++;
+        startPos++;
+        mask= mask << 1;
+        if (pos > 7) {
+            pos= 0;
+            index++;
+        }
+        if (startPos > 7) {
+            startPos= 0;
+            startIndex++;
+            mask= 1;
+        }
+    }
+
+    mask= 0;
+    for(startPos= 0; startPos < pos; startPos++) {
+        mask= (mask << 1) | 1;
+    }
+    bits[index]= bits[index] & mask;
+    index++;
+    if (index < bits.Length) {
+        bits.Remove(index, bits.Length - index);
+    }
+}
