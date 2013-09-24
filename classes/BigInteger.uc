@@ -309,5 +309,7 @@ final function shiftRight(int offset) {
     index++;
     if (index < bits.Length) {
         bits.Remove(index, bits.Length - index);
+    } else if (bits[bits.Length - 1] == 0) {
+        bits.Remove(bits.Length - 1, 1);
     }
 }
