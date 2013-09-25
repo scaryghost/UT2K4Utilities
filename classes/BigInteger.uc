@@ -3,6 +3,7 @@ class BigInteger extends Object;
 var byte sign;
 var array<byte> bits;
 
+/*
 function setStrValue(string strVal) {
     local BigInteger mag, scale, current, sum;
     local int i, endIndex, value;
@@ -24,6 +25,7 @@ function setStrValue(string strVal) {
     }
     bits= sum.bits;
 }
+*/
 
 function BigInteger clone() {
     local BigInteger objClone;
@@ -157,21 +159,30 @@ static final operator(24) bool <(BigInteger left, BigInteger right) {
     return (left.sign == right.sign && compareBytes(left.bits, right.bits) == -1);
 }
 
-static final operator(16) BigInteger * (BigInteger left, BigInteger right);
+static final operator(24) bool >(BigInteger left, BigInteger right) {
+    if (left.sign > right.sign) {
+        return false;
+    } else if (left.sign < right.sign) {
+        return true;
+    }
+
+    return (left.sign == right.sign && compareBytes(left.bits, right.bits) == 1);
+}
+
 static final operator(34) BigInteger *= (out BigInteger left, BigInteger right);
 static final operator(34) BigInteger += (out BigInteger left, BigInteger right);
 
-static final function BigInteger add(BigInteger left, BigInteger right) {
+final function BigInteger add(BigInteger right) {
     local array<byte> opLeft, opRight;
     local BigInteger sum;
     local int magCompare;
 
     sum= new class'BigInteger';
-    magCompare= compareBytes(left.bits, right.bits);
-    if (left.sign == 1) {
-        opLeft= twosComplement(left.bits);
+    magCompare= compareBytes(bits, right.bits);
+    if (sign == 1) {
+        opLeft= twosComplement(bits);
     } else {
-        opLeft= left.bits;
+        opLeft= bits;
     }
     if (right.sign == 1) {
         opRight= twosComplement(right.bits);
@@ -179,8 +190,8 @@ static final function BigInteger add(BigInteger left, BigInteger right) {
         opRight= right.bits;
     }
     sum.bits= addBytes(opLeft, opRight);
-    sum.sign= byte(left.sign == 1 && right.sign == 1 || left.sign == 1 && right.sign == 0 && magCompare == 1 || 
-            left.sign == 0 && right.sign == 1 && magCompare == -1);
+    sum.sign= byte(sign == 1 && right.sign == 1 || sign == 1 && right.sign == 0 && magCompare == 1 || 
+            sign == 0 && right.sign == 1 && magCompare == -1);
     if (sum.sign == 1) {
         sum.bits= twosComplement(sum.bits);
     }
@@ -196,7 +207,7 @@ static final preoperator BigInteger -(BigInteger right) {
 }
 
 static final function BigInteger subtract(BigInteger left, BigInteger right) {
-    return add(left, -right);
+    return left.add(-right);
 }
 
 final function shiftLeft(int offset) {
@@ -312,4 +323,30 @@ final function shiftRight(int offset) {
     } else if (bits[bits.Length - 1] == 0) {
         bits.Remove(bits.Length - 1, 1);
     }
+}
+
+final function BigInteger multiply(BigInteger right) {
+    local BigInteger leftClone, rightClone, sum, zero;
+    local array<BigInteger> parts;
+    local int i, j;
+
+    zero= new class'BigInteger';
+    zero.bits.Length= 1;
+    leftClone= clone();
+    rightClone= right.clone();
+    while(leftClone > zero) {
+        if ((leftClone.bits[0] & 0x1) == 0x1) {
+            for(i= 0; i < rightClone.bits.Length; i++) {
+                parts[j]= rightClone.clone();
+            }
+        }
+        leftClone.shiftRight(1);
+        rightClone.shiftLeft(1);
+    }
+
+    sum= new class'BigInteger';
+    for(j= 0; j < parts.Length; j++) {
+        sum.add(parts[j]);
+    }
+    return sum;
 }
