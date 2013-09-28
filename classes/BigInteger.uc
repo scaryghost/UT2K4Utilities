@@ -334,10 +334,11 @@ final function BigInteger multiply(BigInteger right) {
     zero.bits.Length= 1;
     leftClone= clone();
     rightClone= right.clone();
-    while(leftClone > zero) {
+    while(compareBytes(leftClone.bits, zero.bits) > 0) {
         if ((leftClone.bits[0] & 0x1) == 0x1) {
             for(i= 0; i < rightClone.bits.Length; i++) {
                 parts[j]= rightClone.clone();
+                j++;
             }
         }
         leftClone.shiftRight(1);
@@ -346,7 +347,8 @@ final function BigInteger multiply(BigInteger right) {
 
     sum= new class'BigInteger';
     for(j= 0; j < parts.Length; j++) {
-        sum.add(parts[j]);
+        sum= sum.add(parts[j]);
     }
+    sum.sign= sign ^ right.sign;
     return sum;
 }
